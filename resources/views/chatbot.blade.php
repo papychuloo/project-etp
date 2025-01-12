@@ -12,17 +12,32 @@
             margin: 0;
             padding: 0;
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #6a11cb, #2575fc);
-            color: #fff;
+            background: var(--background-color);
+            color: var(--text-color);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
-            overflow: hidden;
         }
 
-        /* Barre de navigation */
+        :root {
+            --background-color: #ffffff;
+            --text-color: #333333;
+            --chat-bg: #f0f0f0;
+            --button-bg: #2575fc;
+            --button-hover: #6a11cb;
+        }
+
+        .dark-mode {
+            --background-color: #1c1c1c;
+            --text-color: #ffffff;
+            --chat-bg: #333333;
+            --button-bg: #6a11cb;
+            --button-hover: #2575fc;
+        }
+
+        /* Navbar */
         .navbar {
             position: fixed;
             top: 0;
@@ -30,10 +45,9 @@
             background: rgba(0, 0, 0, 0.8);
             color: white;
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
             align-items: center;
             padding: 10px 20px;
-            z-index: 1000;
         }
 
         .navbar button {
@@ -50,33 +64,53 @@
             background-color: #e63939;
         }
 
+        .theme-toggle {
+            background-color: #2575fc;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+            border: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background-color: #6a11cb;
+        }
+
         h1 {
-            margin: 60px 0 20px;
-            font-size: 3rem;
+            margin: 100px 0 20px;
+            font-size: 2.5rem;
             text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
         }
 
         .chat-container {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--chat-bg);
             padding: 20px;
             border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
             width: 90%;
             max-width: 500px;
             text-align: center;
-            animation: fadeInUp 2s ease forwards;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
         }
 
-        @keyframes fadeInUp {
-            0% {
-                opacity: 0;
-                transform: translateY(50px);
-            }
+        .chat-bubble {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
 
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #2575fc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 10px;
         }
 
         input[type="text"] {
@@ -88,28 +122,21 @@
             font-size: 1rem;
             outline: none;
             color: #333;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-            transition: transform 0.2s;
-        }
-
-        input[type="text"]:focus {
-            transform: scale(1.05);
         }
 
         button {
-            background-color: #2575fc;
+            background-color: var(--button-bg);
             color: white;
             padding: 10px 20px;
             border: none;
             border-radius: 25px;
             font-size: 1rem;
             cursor: pointer;
-            transition: all 0.3s ease, transform 0.2s ease;
+            transition: all 0.3s ease;
         }
 
         button:hover {
-            background-color: #6a11cb;
-            transform: scale(1.1);
+            background-color: var(--button-hover);
         }
 
         p#response {
@@ -118,16 +145,20 @@
             background: rgba(255, 255, 255, 0.2);
             padding: 10px;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
             word-wrap: break-word;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.3s ease;
         }
 
-        p#response.show {
-            opacity: 1;
-            transform: translateY(0);
+        .loading {
+            animation: fade-in-out 1s infinite;
+        }
+
+        @keyframes fade-in-out {
+            0%, 100% {
+                opacity: 0.5;
+            }
+            50% {
+                opacity: 1;
+            }
         }
     </style>
 </head>
@@ -135,58 +166,68 @@
 <body>
     <!-- Barre de navigation -->
     <div class="navbar">
-        <form action="{{ route('logout') }}" method="POST" style="margin: 0;">
+        <form action="{{ route('logout') }}" method="POST">
             @csrf
             <button type="submit">Déconnexion</button>
         </form>
+        <button class="theme-toggle" onclick="toggleTheme()">Thème</button>
     </div>
 
-    <!-- Contenu principal -->
-    <h1>Bienvenue sur le Chatbot Éducatif</h1>
+    <!-- Titre principal -->
+    <h1>Chatbot Éducatif</h1>
+
+    <!-- Conteneur du chatbot -->
     <div class="chat-container">
-        <input id="question" type="text" placeholder="Pose ta question ici" />
+        <div class="chat-bubble">
+            <div class="avatar">🤖</div>
+            <p id="response" class="loading">Le chatbot est prêt à répondre !</p>
+        </div>
+        <input id="question" type="text" placeholder="Posez votre question ici 😊" aria-label="Entrez votre question" />
         <button onclick="sendQuestion()">Envoyer</button>
-        <p id="response"></p>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
+        // Basculer entre thème clair et sombre
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+        }
+
         async function sendQuestion() {
             const question = document.getElementById('question').value;
             const responseElement = document.getElementById('response');
 
             if (!question.trim()) {
                 responseElement.textContent = "Veuillez entrer une question.";
-                responseElement.classList.add('show');
                 return;
             }
 
-            // Simulate loading
             responseElement.textContent = "Chargement...";
-            responseElement.classList.add('show');
+            responseElement.classList.add('loading');
 
             try {
-                const response = await fetch('/chatbot/query', {
-                    method: 'POST',
+                const response = await axios.post('/chatbot/query', {
+                    question: question
+                }, {
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    },
-                    body: JSON.stringify({
-                        question
-                    }),
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    responseElement.textContent = data.answer || "Aucune réponse disponible.";
+                responseElement.classList.remove('loading');
+
+                if (response.data.answer) {
+                    responseElement.textContent = response.data.answer;
                 } else {
-                    responseElement.textContent = "Erreur lors de la communication avec le serveur.";
+                    responseElement.textContent = "Je ne connais pas encore la réponse à cette question.";
                 }
             } catch (error) {
-                responseElement.textContent = "Une erreur est survenue.";
+                responseElement.classList.remove('loading');
+                responseElement.textContent = "Une erreur est survenue. Veuillez réessayer.";
             }
         }
     </script>
 </body>
+
 
 </html>

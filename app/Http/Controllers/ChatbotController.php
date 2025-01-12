@@ -3,50 +3,96 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Services\DialogflowService;
+use App\Models\Feedback;
+use App\Models\Faq;
 
 class ChatbotController extends Controller
 {
-    protected $dialogflow;
-
-    public function __construct(DialogflowService $dialogflow)
+    public function handleQuery(Request $request)
     {
-        $this->dialogflow = $dialogflow;
+        $question = strtolower($request->input('question'));
+        $category = strtolower($request->input('category', ''));
+
+        // Filtrer la FAQ par catégorie si applicable
+        $filteredFaq = $this->filterByCategory($category);
+
+        // Rechercher la réponse dans la FAQ
+        $answer = $this->findAnswerInFaq($question, $filteredFaq);
+
+        // Demander un feedback à l'utilisateur
+        $this->askForFeedback($answer ?? "Je ne connais pas encore la réponse à cette question.", $question);
+
+        return response()->json([
+            'answer' => $answer ?? "Je ne connais pas encore la réponse à cette question.",
+            'feedback_prompt' => 'Est-ce que cela a répondu à votre question ? (Oui/Non)'
+        ]);
     }
 
-    public function handleMessage(Request $request)
+    private function filterByCategory($category)
     {
-        try {
-            $request->validate([
-                'message' => 'required|string',
-            ]);
+        if (empty($category)) {
+            return Faq::all(); // Récupère toutes les FAQs si aucune catégorie n'est spécifiée
+        }
 
-            $sessionId = $request->session()->getId();
-            $userMessage = $request->input('message');
+        return Faq::where('category', 'like', "%$category%")->get(); // Filtre par catégorie
+    }
 
-            $botResponse = $this->dialogflow->detectIntent($sessionId, $userMessage);
+    private function findAnswerInFaq($question, $faq)
+    {
+        foreach ($faq as $item) {
+            // Recherche dans la question principale
+            if (stripos($item->question, $question) !== false) {
+                return $item->answer;
+            }
 
-            return response()->json(['response' => $botResponse]);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Erreur : ' . $e->getMessage()], 500);
+            // Recherche par mots-clés
+            $keywords = is_array($item->keywords) ? $item->keywords : json_decode($item->keywords, true);
+            if ($keywords) {
+                foreach ($keywords as $keyword) {
+                    if (stripos($question, strtolower($keyword)) !== false) {
+                        return $item->answer;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function askForFeedback($answer, $question)
+    {
+        session(['last_answer' => $answer, 'last_question' => $question]);
+    }
+
+    public function handleFeedback(Request $request)
+    {
+        $feedback = strtolower($request->input('feedback'));
+        $question = session('last_question');
+
+        if (!$question) {
+            return response()->json(['error' => 'Aucune question précédente n\'a été trouvée.']);
+        }
+
+        if ($feedback === 'non') {
+            $this->storeFeedback($question, 'negative');
+            return response()->json(['message' => 'Merci pour votre retour ! Nous allons améliorer la réponse.']);
+        } elseif ($feedback === 'oui') {
+            $this->storeFeedback($question, 'positive');
+            return response()->json(['message' => 'Merci, nous sommes heureux d’avoir pu vous aider !']);
+        } else {
+            return response()->json(['error' => 'Veuillez répondre par "Oui" ou "Non".']);
         }
     }
 
-    public function handleQuery(Request $request)
-{
-    $question = $request->input('question');
-
-    // Base de données fictive pour les réponses
-    $faq = [
-        "Quels sont les horaires de Calcul avancé ?" => "Le cours de Calcul avancé a lieu le lundi de 10h à 12h en salle A101.",
-        "Comment obtenir un certificat d'inscription ?" => "Vous pouvez obtenir un certificat d'inscription via votre portail étudiant dans la section 'Documents'.",
-        "Quand est le prochain examen de maths ?" => "Le prochain examen de maths est prévu le 15 décembre à 9h en salle B202."
-    ];
-
-    // Recherche de la réponse correspondante
-    $answer = $faq[$question] ?? "Je ne connais pas encore la réponse à cette question.";
-
-    return response()->json(['answer' => $answer]);
-}
-
+    public function storeFeedback($question, $feedback)
+    {
+        try {
+            $feedbackRecord = new Feedback();
+            $feedbackRecord->question = $question;
+            $feedbackRecord->feedback = $feedback;
+            $feedbackRecord->save();
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Une erreur est survenue lors de l\'enregistrement du feedback.']);
+        }
+    }
 }

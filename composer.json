@@ -10,7 +10,8 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "google/cloud-dialogflow": "^1.17",
+        "google/cloud-dialogflow": "^2.0",
+        "guzzlehttp/guzzle": "^7.9",
         "laravel/framework": "^11.31",
         "laravel/tinker": "^2.9"
     },

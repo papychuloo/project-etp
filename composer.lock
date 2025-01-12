@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "48d56436ce30c63823ea95fad842e531",
+    "content-hash": "3b3605915a5d46657fabdc68c4025522",
     "packages": [
         {
             "name": "brick/math",
@@ -707,16 +707,16 @@
         },
         {
             "name": "google/cloud-dialogflow",
-            "version": "v1.17.2",
+            "version": "v2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-cloud-php-dialogflow.git",
-                "reference": "a485d1c71c0a9a35b6d676967729241b584cc5c3"
+                "reference": "3e54ad633e3cae955e577c434f0a52a6c1ab3875"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-cloud-php-dialogflow/zipball/a485d1c71c0a9a35b6d676967729241b584cc5c3",
-                "reference": "a485d1c71c0a9a35b6d676967729241b584cc5c3",
+                "url": "https://api.github.com/repos/googleapis/google-cloud-php-dialogflow/zipball/3e54ad633e3cae955e577c434f0a52a6c1ab3875",
+                "reference": "3e54ad633e3cae955e577c434f0a52a6c1ab3875",
                 "shasum": ""
             },
             "require": {
@@ -751,9 +751,9 @@
             ],
             "description": "Google Cloud Dialogflow Client for PHP",
             "support": {
-                "source": "https://github.com/googleapis/google-cloud-php-dialogflow/tree/v1.17.2"
+                "source": "https://github.com/googleapis/google-cloud-php-dialogflow/tree/v2.0.0"
             },
-            "time": "2024-12-12T21:15:35+00:00"
+            "time": "2025-01-11T02:14:50+00:00"
         },
         {
             "name": "google/common-protos",
@@ -8588,12 +8588,12 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.2"
     },
-    "platform-dev": [],
+    "platform-dev": {},
     "plugin-api-version": "2.6.0"
 }

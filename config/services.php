@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'dialogflow' => [
+        'project_id' => env('DIALOGFLOW_PROJECT_ID'),
+        'credentials_json' => storage_path('app/google/dialogflow-credentials.json'),
+        'language' => env('DIALOGFLOW_LANGUAGE', 'fr'),
+    ],
+
 ];

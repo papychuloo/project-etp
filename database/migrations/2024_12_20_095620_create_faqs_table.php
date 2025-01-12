@@ -15,7 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string('question');
             $table->text('answer');
+            $table->json('keywords')->nullable();
+            $table->string('category');
             $table->timestamps();
+            
+            // Index pour accélérer les recherches
+            $table->index('category');
         });
     }
 
