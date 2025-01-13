@@ -18,17 +18,17 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
-            'password' => 'required|min:6|confirmed', // Vérifie la confirmation
+            'password' => 'required|min:6|confirmed', 
         ]);
 
-        // Création de l'utilisateur
+        
         User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => bcrypt($request->password), // Hash du mot de passe
+            'password' => bcrypt($request->password), 
         ]);
 
-        // Connexion automatique après inscription
+        
         Auth::attempt($request->only('email', 'password'));
 
         return redirect('/chatbot');

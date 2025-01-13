@@ -13,13 +13,12 @@ class ChatbotController extends Controller
         $question = strtolower($request->input('question'));
         $category = strtolower($request->input('category', ''));
 
-        // Filtrer la FAQ par catégorie si applicable
         $filteredFaq = $this->filterByCategory($category);
 
-        // Rechercher la réponse dans la FAQ
+        
         $answer = $this->findAnswerInFaq($question, $filteredFaq);
 
-        // Demander un feedback à l'utilisateur
+        
         $this->askForFeedback($answer ?? "Je ne connais pas encore la réponse à cette question.", $question);
 
         return response()->json([
@@ -31,21 +30,21 @@ class ChatbotController extends Controller
     private function filterByCategory($category)
     {
         if (empty($category)) {
-            return Faq::all(); // Récupère toutes les FAQs si aucune catégorie n'est spécifiée
+            return Faq::all(); 
         }
 
-        return Faq::where('category', 'like', "%$category%")->get(); // Filtre par catégorie
+        return Faq::where('category', 'like', "%$category%")->get(); 
     }
 
     private function findAnswerInFaq($question, $faq)
     {
         foreach ($faq as $item) {
-            // Recherche dans la question principale
+            
             if (stripos($item->question, $question) !== false) {
                 return $item->answer;
             }
 
-            // Recherche par mots-clés
+         
             $keywords = is_array($item->keywords) ? $item->keywords : json_decode($item->keywords, true);
             if ($keywords) {
                 foreach ($keywords as $keyword) {
